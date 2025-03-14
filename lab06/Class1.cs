@@ -1,8 +1,8 @@
 ﻿namespace lab06;
 public interface IDoubleEndedCollection<T>
 {
-    T First { get; }
-    T Last { get; }
+    public T First { get; }
+    public T Last { get; }
     int Length { get; }
 
     void AddLast(T value);  
@@ -13,8 +13,6 @@ public interface IDoubleEndedCollection<T>
     void RemoveByValue(T value);
     void ReverseList();
 }
-
-
 
 public class DNode<T>
 {
@@ -34,12 +32,18 @@ public class DNode<T>
 
     public bool Equals(DNode<T> node)
     {
-        if(node.Value.Equals(Value))
+        
+        if(Value.GetHashCode() == node.GetHashCode())
         {
             return true;
         }
 
         return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return Value.GetHashCode();
     }
 }
 
@@ -127,74 +131,98 @@ public class DoublyLinkedList<T> : IDoubleEndedCollection<T>
 
     public void InsertAfter(DNode<T> DN, T value)
     {
-        //used to insert after the DN node given
-        //will need to set the DN.Value or it will not do anything.
-        DNode<T> newNode = new DNode<T>(value);
-        DNode<T> curr = _head;
-
-        //travers the list to find the first node Equal to DN
-        while(curr != null)
+        //The idea is to give it the node that is equal to the one you want to AddAfter and a value witch will be the node added after the actual node you gave it.
+        if(ContainsValue(DN.Value) == true)
         {
-            if(curr.Equals(DN))
+            DoublyLinkedList<T> temp = new DoublyLinkedList<T>();
+            DNode<T> Curr = _head;
+            while(Curr != null)
             {
-                curr.Next = newNode;
-                break;
-            }
-            curr = curr.Next;
-        }
+                temp.AddLast(Curr.Value);
+                if(Curr.Equals(DN))
+                {
+                    temp.AddLast(value);
+                }
+                Curr = Curr.Next;
 
-        if(curr == null)
+                while(Length > 0)
+                {
+                    RemoveFirst();
+                }
+
+                DNode<T> currTemp = temp._head;
+                while(currTemp != null)
+                {
+                    AddLast(currTemp.Value);
+                    currTemp = currTemp.Next;
+                }
+            }
+            //ReverseList();
+        }else
         {
-            Console.WriteLine("Node not found");
+            Console.WriteLine("The list does not contain that node");
         }
-        
     }
 
     public void RemoveByValue(T value)
     {
         //Will remove any node out of the list with the given value.
+        //should remove the first node found with that value.
+        //should set missing pointers to what they need to be.
+        //new temp list to hold all the values that are not the one given
+        DoublyLinkedList<T> temp = new DoublyLinkedList<T>();
+        if(ContainsValue(value) == true)
+        {
+            DNode<T> Curr = _head;
+            DNode<T> GivenNode = new DNode<T>(value);
+
+            //iterarte through the current list and add each node to the temp list unless it is the GivenNode
+            while(Curr != null)
+            {
+                if(Curr.Equals(GivenNode))
+                {
+                    //skip that node
+                    RemoveLast();
+                    Curr = Curr.Next;
+                }
+                AddFirst(Curr.Value);
+                RemoveLast();
+                Curr = Curr.Next;
+            }
+            ReverseList();
+            
+        }else
+        {
+            Console.WriteLine("That value was not found in the list");
+        }
+
+        
+    }
+
+    public bool ContainsValue(T value)
+    {
+        DNode<T> newNode = new DNode<T>(value);
         DNode<T> Curr = _head;
         while(Curr != null)
         {
-            if(Curr.Value.Equals(value))
+            if(newNode.Equals(Curr))
             {
-                if(Curr.Next == null)
-                {
-                    _tail = Curr.Previous;
-                }
-               
-            }else
-            {
-                Curr.Next.Previous = Curr.Previous;
+                return true;
             }
-
-            if(Curr.Previous == null)
-            {
-                _head = Curr.Next;
-            }else
-            {
-                Curr.Previous.Next = Curr.Next;
-            }
-
-            Curr = null;
-            Length --;
+            Curr = Curr.Next;
         }
+        return false;
     }
 
     public void ReverseList()
     {
-        DoublyLinkedList<T> temp = Reverse();
-        DNode<T> Curr = temp._head;
-        while(Length > 0)
-        {
-            RemoveFirst();
-        }
-
-        for(int i = 0; i<temp.Length; i++)
-        {
-            AddLast(Curr.Value);
-            Curr = Curr.Next;
-        }
+            DNode<T> newCurr = _tail;
+            while(newCurr != null)
+            {
+                AddLast(newCurr.Value);
+                newCurr = newCurr.Previous;
+                RemoveFirst();
+            }
     }
 
     public DoublyLinkedList<T> Reverse()
